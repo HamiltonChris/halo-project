@@ -29,6 +29,7 @@
         "high water temperature": (string),
         "low water temperature": (string),
         "low flow temperature": (string),
+        "flow rate": (int),
     }
 }
     
