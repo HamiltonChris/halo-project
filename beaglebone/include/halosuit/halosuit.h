@@ -13,6 +13,9 @@
 #define	ON_BUTTON 		    6	//GPIO 26
 #define	PELTIER			    7	//GPIO 46
 
+//current draws for each device
+//plus a base current draw
+
 
 #define HIGH 				1
 #define LOW					0
@@ -22,6 +25,14 @@
 #define ARMPITS				1
 #define CROTCH				2
 #define WATER 				3
+
+#define VOLTAGE_1           1
+#define VOLTAGE_2           2
+
+#define VOLTAGE_START_1     12.6
+#define VOLTAGE_START_2     12.0
+
+#define VOLTAGE_END         10
 
 void halosuit_init(); //sets up the file descriptors
 void halosuit_exit(); //closes the file descriptors
@@ -35,5 +46,11 @@ int halosuit_relay_value(unsigned int relay, int *value);
 int halosuit_temperature_value(unsigned int location, double *temp);
 
 int halosuit_flowrate(int *flow);
+
+int halosuit_voltage_value(unsigned int battery, double *value);
+
+int halosuit_current_draw_value(int *value);
+
+int halosuit_heartrate(int *heart);
 
 #endif
