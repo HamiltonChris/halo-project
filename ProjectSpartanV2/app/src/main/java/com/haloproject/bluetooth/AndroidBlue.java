@@ -2,7 +2,6 @@ package com.haloproject.bluetooth;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
@@ -11,20 +10,18 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 /**
  * Created by Adam Brykajlo on 18/02/15.
  */
-public class AndroidBlue {
+public class AndroidBlue
+{
     private BluetoothSocket mSocket;
     private BluetoothAdapter mAdapter;
     private ArrayAdapter<BluetoothDevice> mDevices;
@@ -51,7 +48,8 @@ public class AndroidBlue {
     public final Switch mainLights;
 
 
-    protected AndroidBlue() {
+    protected AndroidBlue()
+    {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         mContext.registerReceiver(mReceiver, filter);
@@ -66,13 +64,17 @@ public class AndroidBlue {
         peltier = new Switch("peltier");
         waterPump = new Switch("water pump");
         headFans = new Switch("head fans");
-        mainLights = new Switch("lights") {
-            public void auto() {
-                try {
+        mainLights = new Switch("lights")
+        {
+            public void auto()
+            {
+                try
+                {
                     JSONObject switchObject = new JSONObject();
                     switchObject.put(this.location, "auto");
                     mSocket.getOutputStream().write(switchObject.toString().getBytes());
-                } catch (Exception e) {
+                } catch (Exception e)
+                {
 
                 }
             }
@@ -81,17 +83,22 @@ public class AndroidBlue {
         mHandler = new Handler(Looper.getMainLooper());
     }
 
-    static public void setContext(Context context) {
+    static public void setContext(Context context)
+    {
         mContext = context;
     }
 
-    static public void setActivity(Activity activity) {
+    static public void setActivity(Activity activity)
+    {
         mActivity = activity;
     }
 
-    static public AndroidBlue getInstance() {
-        if (mContext != null && mActivity != null) {
-            if (mAndroidBlue == null) {
+    static public AndroidBlue getInstance()
+    {
+        if(mContext != null && mActivity != null)
+        {
+            if(mAndroidBlue == null)
+            {
                 mAndroidBlue = new AndroidBlue();
             }
             return mAndroidBlue;
@@ -99,37 +106,48 @@ public class AndroidBlue {
         return null;
     }
 
-    public boolean isEnabled() {
+    public boolean isEnabled()
+    {
         return mAdapter.isEnabled();
     }
 
-    public void enableBluetooth() {
-        if (!isEnabled()) {
+    public void enableBluetooth()
+    {
+        if(!isEnabled())
+        {
             Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             mActivity.startActivityForResult(enableBTIntent, REQUEST_ENABLE_BT);
         }
     }
 
-    public void disableBluetooth() {
-        if (isEnabled()) {
+    public void disableBluetooth()
+    {
+        if(isEnabled())
+        {
             mAdapter.disable();
         }
     }
 
-    public boolean isConnected() {
-        if (mSocket != null) {
+    public boolean isConnected()
+    {
+        if(mSocket != null)
+        {
             return mSocket.isConnected();
         }
         return false;
     }
 
-    public ArrayAdapter<String> getDeviceStrings() {
+    public ArrayAdapter<String> getDeviceStrings()
+    {
         return mDeviceStrings;
     }
 
-    public boolean startDiscovery() {
-        if (isEnabled()) {
-            if (mAdapter.isDiscovering()) {
+    public boolean startDiscovery()
+    {
+        if(isEnabled())
+        {
+            if(mAdapter.isDiscovering())
+            {
                 mAdapter.cancelDiscovery();
                 mDevices.clear();
                 mDeviceStrings.clear();
@@ -139,35 +157,46 @@ public class AndroidBlue {
         return false;
     }
 
-    public boolean setBeagleBone(int pos) {
-        if (pos < mDevices.getCount()) {
+    public boolean setBeagleBone(int pos)
+    {
+        if(pos < mDevices.getCount())
+        {
             mBeagleBone = mDevices.getItem(pos);
             return true;
         }
         return false;
     }
 
-    public boolean setBeagleBone(String device) {
-        try {
+    public boolean setBeagleBone(String device)
+    {
+        try
+        {
             mBeagleBone = mAdapter.getRemoteDevice(device);
             return true;
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e)
+        {
             return false;
         }
     }
 
-    public BluetoothDevice getBeagleBone() {
+    public BluetoothDevice getBeagleBone()
+    {
         return mBeagleBone;
     }
 
-    public void connect() {
+    public void connect()
+    {
         new Thread(new ConnectRunnable()).start();
     }
 
-    public boolean sendConfiguration() {
-        if (isConnected()) {
-            try {
-                if (mBeagleBone != null) {
+    public boolean sendConfiguration()
+    {
+        if(isConnected())
+        {
+            try
+            {
+                if(mBeagleBone != null)
+                {
                     JSONObject configuration = new JSONObject();
 
                     JSONObject android = new JSONObject();
@@ -176,7 +205,8 @@ public class AndroidBlue {
 
                     mSocket.getOutputStream().write(configuration.toString().getBytes());
                 }
-            } catch (Exception e) {
+            } catch (Exception e)
+            {
                 return false;
             }
             return true;
@@ -184,17 +214,22 @@ public class AndroidBlue {
         return false;
     }
 
-    public boolean sendDeConfiguration() {
-        if (isConnected()) {
-            try {
-                if (mBeagleBone != null) {
+    public boolean sendDeConfiguration()
+    {
+        if(isConnected())
+        {
+            try
+            {
+                if(mBeagleBone != null)
+                {
                     JSONObject deconfiguration = new JSONObject();
                     JSONObject android = new JSONObject();
                     android.put("android", "delete");
                     deconfiguration.put("configuration", android);
                     mSocket.getOutputStream().write(deconfiguration.toString().getBytes());
                 }
-            } catch (Exception e) {
+            } catch (Exception e)
+            {
                 return false;
             }
             return true;
@@ -202,11 +237,15 @@ public class AndroidBlue {
         return false;
     }
 
-    private class ConnectRunnable implements Runnable {
+    private class ConnectRunnable implements Runnable
+    {
         @Override
-        public void run() {
-            if (mBeagleBone != null) {
-                try {
+        public void run()
+        {
+            if(mBeagleBone != null)
+            {
+                try
+                {
                     Method m = mBeagleBone.getClass().getMethod("createRfcommSocket", new Class[]{int.class});
                     mSocket = (BluetoothSocket) m.invoke(mBeagleBone, 3);
 
@@ -214,11 +253,14 @@ public class AndroidBlue {
 
                     mHandler.post(onConnect);
                     new Thread(new ConnectedRunnable()).start();
-                } catch (Exception e) {
+                } catch (Exception e)
+                {
 
-                    mActivity.runOnUiThread(new Runnable() {
+                    mActivity.runOnUiThread(new Runnable()
+                    {
                         @Override
-                        public void run() {
+                        public void run()
+                        {
                             Toast.makeText(mContext, "Could Not Connect to " + mBeagleBone, Toast.LENGTH_LONG).show();
                         }
                     });
@@ -228,19 +270,24 @@ public class AndroidBlue {
         }
     }
 
-    private class ConnectedRunnable implements Runnable {
+    private class ConnectedRunnable implements Runnable
+    {
         private byte[] mBytes;
 
         @Override
-        public void run() {
+        public void run()
+        {
 
-            while (isConnected()) {
-                try {
+            while (isConnected())
+            {
+                try
+                {
                     mBytes = new byte[528];
                     mSocket.getInputStream().read(mBytes);
                     mJSON = new JSONObject(new String(mBytes));
                     mHandler.post(onReceive);
-                } catch (Exception e) {
+                } catch (Exception e)
+                {
 
                 }
             }
@@ -248,22 +295,29 @@ public class AndroidBlue {
     }
 
 
-    public void setOnConnect(Runnable onConnect) {
+    public void setOnConnect(Runnable onConnect)
+    {
         this.onConnect = onConnect;
     }
-    public void setOnReceive(Runnable onReceive) {
+
+    public void setOnReceive(Runnable onReceive)
+    {
         this.onReceive = onReceive;
     }
 
-    public void destroyOnReceive() {
+    public void destroyOnReceive()
+    {
         this.onReceive = null;
     }
 
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver()
+    {
+        public void onReceive(Context context, Intent intent)
+        {
             String action = intent.getAction();
             // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            if(BluetoothDevice.ACTION_FOUND.equals(action))
+            {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 mDeviceStrings.add(device.getName() + "\n" + device.getAddress());
@@ -273,46 +327,59 @@ public class AndroidBlue {
         }
     };
 
-    public class Temperature {
-        public Temperature(String location) {
+    public class Temperature
+    {
+        public Temperature(String location)
+        {
             this.location = location;
         }
 
         protected String location;
 
-        public double getValue() {
-            try {
+        public double getValue()
+        {
+            try
+            {
                 return mJSON.getDouble(location);
-            } catch (Exception e) {
+            } catch (Exception e)
+            {
                 return -1000.0;
             }
         }
     }
 
     //used for turning things on or off on the beaglebone
-    public class Switch {
-        public Switch(String location) {
+    public class Switch
+    {
+        public Switch(String location)
+        {
             this.location = location;
         }
 
         protected String location;
 
-        public void on() {
-            try {
+        public void on()
+        {
+            try
+            {
                 JSONObject switchObject = new JSONObject();
                 switchObject.put(location, "on");
                 mSocket.getOutputStream().write(switchObject.toString().getBytes());
-            } catch (Exception e) {
+            } catch (Exception e)
+            {
 
             }
         }
 
-        public void off() {
-            try {
+        public void off()
+        {
+            try
+            {
                 JSONObject switchObject = new JSONObject();
                 switchObject.put(location, "off");
                 mSocket.getOutputStream().write(switchObject.toString().getBytes());
-            } catch (Exception e) {
+            } catch (Exception e)
+            {
 
             }
         }
