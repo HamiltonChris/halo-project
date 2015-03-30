@@ -13,6 +13,8 @@
     "crotch temperature":(double),
     "water temperature":(double),
     "flow rate":(int),
+    "hud battery": (double),
+    "play sound": (string)
     "configuration": {
         "android":(MAC Address(string)),
         "glass":(MAC Address(string)),
@@ -31,6 +33,7 @@
         "low flow temperature": (string),
         "flow rate": (int),
     }
+
 }
     
     
