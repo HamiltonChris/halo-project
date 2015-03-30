@@ -10,11 +10,14 @@
 #include <linux/watchdog.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include <beagleblue/beagleblue.h>
 #include <json/parser.h>
 #include <json/serializer.h>
 #include <halosuit/halosuit.h>
+#include <halosuit/automation.h>
 //#include <testcode/automationtestdata.h>
 #include <config/config.h>
 #include <halosuit/logger.h>
@@ -23,15 +26,23 @@
 
 #define SERIALIZE_DELAY 1 // second
 
+bool watchdog_disabled = false;
+
 int main(int argc, char* argv[])
 {
-
-    int fd = open(WATCHDOG_PATH, O_RDWR);
-    if (fd < -1) {
-	printf("Cannot open watchdog\n");
-	exit(EXIT_FAILURE);
+    if (argc == 2) {
+        if (strcmp("--disable-watchdog", argv[1]) == 0) {
+            watchdog_disabled = true;
+        }
     }
-    
+    int fd;
+    if (!watchdog_disabled) {
+        fd = open(WATCHDOG_PATH, O_RDWR);
+        if (fd < -1) {
+            printf("Cannot open watchdog\n");
+            exit(EXIT_FAILURE);
+        }
+    }
     logger_startup();
 
     char buf[1024];
@@ -40,7 +51,7 @@ int main(int argc, char* argv[])
     halosuit_init();  
     automation_init();
 
-
+    logger_log("Initialization complete");
     // if loop takes longer than 45 secs watchdog will reboot the system
     while (1) {	
 	    // sends status information to android phone and google glass
@@ -48,9 +59,10 @@ int main(int argc, char* argv[])
         beagleblue_android_send(buf);
         beagleblue_glass_send(buf);
 
-	    // kick watchdog
-	    ioctl(fd, WDIOC_KEEPALIVE, NULL);
-	
+        if (!watchdog_disabled) {
+	        // kick watchdog
+	        ioctl(fd, WDIOC_KEEPALIVE, NULL);
+	    }
 	    sleep(SERIALIZE_DELAY);
     } 
 
@@ -61,6 +73,8 @@ int main(int argc, char* argv[])
     config_exit();
     beagleblue_exit();
     beagleblue_join();
+
+    logger_log("Exiting halosuit");
 
     return 0;
 }

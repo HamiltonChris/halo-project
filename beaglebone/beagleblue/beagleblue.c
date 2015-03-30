@@ -16,6 +16,7 @@
 
 #include <beagleblue/beagleblue.h>
 #include <config/config.h>
+#include <halosuit/logger.h>
 //this is hard coded on both ends
 #define ANDROID_PORT 3
 #define GLASS_PORT 2
@@ -63,7 +64,11 @@ static void set_bluetooth_mode(uint32_t mode)
 	dr.dev_id  = dev_id;
 	dr.dev_opt = mode;
 	if (ioctl(sock, HCISETSCAN, (unsigned long) &dr) < 0) {
+		beagleblue_is_done = true;
 		fprintf(stderr, "Can't set scan mode on hci%d: %s (%d)\n", dev_id, strerror(errno), errno);
+        char string[100];
+        sprintf(string, "Can't set scan mode on hci%d: %s (%d)\n", dev_id, strerror(errno), errno);
+        logger_log(string);
     }
 
     close(sock);
@@ -91,7 +96,7 @@ static void beagleblue_connect(int *sock, int *client, uint8_t channel)
     	while (true) {
     		listen(*sock, 1);
 
-			*client = accept(*sock, (struct sockaddr *)&rem_addr, &opt);
+		*client = accept(*sock, (struct sockaddr *)&rem_addr, &opt);
     		ba2str( &rem_addr.rc_bdaddr, buf );
 
     		if (strcmp(buf, android_mac_addr) == 0) {
@@ -100,6 +105,8 @@ static void beagleblue_connect(int *sock, int *client, uint8_t channel)
     			close(*client);
     			fprintf(stdout, "denied connection from %s\n", buf);
 				fflush(stdout);
+
+                logger_log("denied connection\n");
     		}
     	}
     } else if (channel == GLASS_PORT && glass_configured) {
@@ -115,23 +122,21 @@ static void beagleblue_connect(int *sock, int *client, uint8_t channel)
     			close(*client);
     			fprintf(stdout, "denied connection from %s\n", buf);
 				fflush(stdout);
+                
+                logger_log("denied connection\n");
     		}
     	}
     } else {
     	listen(*sock, 1);
 
-		*client = accept(*sock, (struct sockaddr *)&rem_addr, &opt);
-		if (channel == ANDROID_PORT) {
-			android_configured = true;
-		} else {
-			glass_configured = true;
-		}
+	*client = accept(*sock, (struct sockaddr *)&rem_addr, &opt);
+				
     }
-
-    ba2str( &rem_addr.rc_bdaddr, buf );
-
+	ba2str( &rem_addr.rc_bdaddr, buf);
 	fprintf(stdout, "accepted connection from %s\n", buf);
 	fflush(stdout);
+
+    logger_log("accepted connection\n");
 }
 
 static void *android_connect_thread()
@@ -141,6 +146,7 @@ static void *android_connect_thread()
 	if (glass_is_connected) {
 		set_bluetooth_mode(SCAN_DISABLED);
 	}
+    return NULL;
 }
 
 static void *glass_connect_thread()
@@ -150,6 +156,7 @@ static void *glass_connect_thread()
 	if (android_is_connected) {
 		set_bluetooth_mode(SCAN_DISABLED);
 	}
+    return NULL;
 }
 
 static void *android_recv_thread(void *callback)
@@ -185,6 +192,7 @@ static void *android_send_thread()
 				if (current_time - start_time == TIMEOUT) {
 					printf("Android Timed Out\n");
 					fflush(stdout);
+                    logger_log("Android Timed Out\n");
 					android_is_connected = false;
 					//close(android_sock);
 					close(android_client);
@@ -235,6 +243,7 @@ static void *glass_send_thread()
 				if (current_time - start_time == TIMEOUT) {
 					printf("Glass Timed Out\n");
 					fflush(stdout);
+                    logger_log("Glass Timed Out\n");
 					glass_is_connected = false;
 					//close(glass_sock);
 					close(glass_client);
@@ -252,19 +261,22 @@ static void *glass_send_thread()
 
 void beagleblue_init(void (*on_receive)(char *))
 {
-	//get the configuration for mac addresses
-	android_configured = config_get_string("Bluetooth", "android", android_mac_addr, MAX_BUF_SIZE) == 0;
-	glass_configured = config_get_string("Bluetooth", "glass", glass_mac_addr, MAX_BUF_SIZE) == 0;
-
 	beagleblue_is_done = false;
 	set_bluetooth_mode(SCAN_INQUIRY | SCAN_PAGE);
-	printf("Bluetooth Discoverable\n");
-	pthread_create(&android_connect_thread_id, NULL, &android_connect_thread, NULL);
-	pthread_create(&glass_connect_thread_id, NULL, &glass_connect_thread, NULL);
-	pthread_create(&android_send_thread_id, NULL, &android_send_thread, NULL);
-	pthread_create(&android_recv_thread_id, NULL, &android_recv_thread, on_receive);
-	pthread_create(&glass_send_thread_id, NULL, &glass_send_thread, NULL);
-	pthread_create(&glass_recv_thread_id, NULL, &glass_recv_thread, on_receive);
+	//
+	if (!beagleblue_is_done) {
+		android_configured = config_get_string("Bluetooth", "android", android_mac_addr, MAX_BUF_SIZE) == 0;
+		glass_configured = config_get_string("Bluetooth", "glass", glass_mac_addr, MAX_BUF_SIZE) == 0;
+
+		printf("Bluetooth Discoverable\n");
+    	logger_log("Bluetooth Discoverable");
+		pthread_create(&android_connect_thread_id, NULL, &android_connect_thread, NULL);
+		pthread_create(&glass_connect_thread_id, NULL, &glass_connect_thread, NULL);
+		pthread_create(&android_send_thread_id, NULL, &android_send_thread, NULL);
+		pthread_create(&android_recv_thread_id, NULL, &android_recv_thread, on_receive);
+		pthread_create(&glass_send_thread_id, NULL, &glass_send_thread, NULL);
+		pthread_create(&glass_recv_thread_id, NULL, &glass_recv_thread, on_receive);
+	}
 	return;
 }
 
