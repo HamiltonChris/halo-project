@@ -5,16 +5,20 @@
     "head lights red":("on","off"),
     "head lights white":("on","off"),
     "head fans":("on","off"),
-    "water pump":("on","off"),
+    "water pump":("auto","off"),
     "water fan":("on","off"),
-    "peltier":("on","off"),
+    "peltier":("auto","off"),
     "head temperature":(double),
     "armpits temperature":(double),
     "crotch temperature":(double),
     "water temperature":(double),
     "flow rate":(int),
+    "heart rate": (int),
+    "8 AH battery": (int),
+    "2 AH battery": (int),
     "hud battery": (double),
-    "play sound": (string)
+    "phone battery": (int),
+    "play sound": (string),
     "configuration": {
         "android":(MAC Address(string)),
         "glass":(MAC Address(string)),
@@ -33,7 +37,6 @@
         "low flow temperature": (string),
         "flow rate": (int),
     }
-
 }
     
     
