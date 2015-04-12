@@ -6,7 +6,6 @@
     "head lights white":("on","off"),
     "head fans":("on","off"),
     "water pump":("auto","off"),
-    "water fan":("on","off"),
     "peltier":("auto","off"),
     "head temperature":(double),
     "armpits temperature":(double),
