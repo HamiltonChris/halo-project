@@ -6,7 +6,6 @@
     "head lights white":("on","off"),
     "head fans":("on","off"),
     "water pump":("auto","off"),
-    "water fan":("on","off"),
     "peltier":("auto","off"),
     "head temperature":(double),
     "armpits temperature":(double),
@@ -36,6 +35,10 @@
         "low water temperature": (string),
         "low flow temperature": (string),
         "flow rate": (int),
+        "low 8AH battery warning": (string),
+        "low 2AH battery warning": (string),
+        "low hud battery warning": (string),
+        "low phone battery warning": (string),
     }
 }
     
