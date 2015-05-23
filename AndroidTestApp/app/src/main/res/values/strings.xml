@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AndroidTestApp</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="toggle_voice">Toggle Voice</string>
+    <string name="toggle_sounds">Toggle Sounds</string>
+</resources>
