@@ -7,8 +7,10 @@
 #include <string.h>
 
 #include <json/parser.h>
-#include <json/json.h>
+#include <json/serializer.h>
+#include <json.h>
 #include <halosuit/halosuit.h>
+#include <halosuit/stateofcharge.h>
 //#include <testcode/automationtestdata.h>
 #include <halosuit/automation.h>
 #include <halosuit/logger.h>
@@ -118,6 +120,19 @@ void parser_parse(char* json_text)
                 automation_peltier_off();
             }
         }
+
+        else if (strcmp (object->u.object.values[i].name, "hud battery") == 0) {
+            soc_setcharge(GLASS_BATTERY, object->u.object.values[i].value->u.integer);
+        }
+
+        else if (strcmp (object->u.object.values[i].name, "phone battery") == 0) {
+            soc_setcharge(PHONE_BATTERY, object->u.object.values[i].value->u.integer);
+        }
+
+        else if (strcmp(object->u.object.values[i].name, "play sound") == 0) {
+            serializer_save_sound(object->u.object.values[i].value->u.string.ptr);
+        }
+
         else if (strcmp(object->u.object.values[i].name, "configuration") == 0) {
             json_value* config = object->u.object.values[i].value;
             for (int j = 0; j < config->u.object.length; j++) {

@@ -7,10 +7,11 @@
 #include <string.h>
 
 #include <json/serializer.h>
-#include <json/json.h>
-#include <json/json-builder.h>
+#include <json.h>
+#include <json-builder.h>
 #include <beagleblue/beagleblue.h>
 #include <halosuit/halosuit.h>
+#include <halosuit/stateofcharge.h>
 //#include <testcode/automationtestdata.h>
 #include <halosuit/automation.h>
 #include <halosuit/logger.h>
@@ -19,7 +20,9 @@
 #define OFF "off"
 #define AUTO "auto"
 
-// todo: replace printf error messages with a log statement
+#define BUFFER_SIZE 1024
+
+static char* sound_buffer = NULL;
 
 static void get_warnings(json_value *object)
 {
@@ -100,6 +103,49 @@ static void get_warnings(json_value *object)
             logger_log("ERROR: WATER FLOW WARNING UNDEFINED");
     } 
 
+    char turnigy_8AH_warning = automation_getBatteryWarning(TURNIGY_8_AH);
+    switch (turnigy_8AH_warning) {
+        case LOW_SOC:
+            json_object_push(warnings, "low 8AH battery warning", json_string_new("TURNIGY 8 AH LOW BATTERY"));
+            break;
+        case NOMINAL_SOC:
+            break;
+        default:
+            logger_log("ERROR: TURNIGY 8AH BATTERY WARNING UNDEFINED");
+    }
+
+    char turnigy_2AH_warning = automation_getBatteryWarning(TURNIGY_2_AH);
+    switch (turnigy_2AH_warning) {
+        case LOW_SOC:
+            json_object_push(warnings, "low 2AH battery warning", json_string_new("TURNIGY 2 AH LOW BATTERY"));
+            break;
+        case NOMINAL_SOC:
+            break;
+        default:
+            logger_log("ERROR: TURNIGY 2AH BATTERY WARNING UNDEFINED");
+    }
+
+    char glass_battery_warning = automation_getBatteryWarning(GLASS_BATTERY);
+    switch (glass_battery_warning) {
+        case LOW_SOC:
+            json_object_push(warnings, "low hud battery warning", json_string_new("GOOGLE GLASS LOW BATTERY"));
+            break;
+        case NOMINAL_SOC:
+            break;
+        default:
+            logger_log("ERROR: GLASS BATTERY WARNING UNDEFINED");
+    }
+
+    char phone_battery_warning = automation_getBatteryWarning(PHONE_BATTERY);
+    switch (phone_battery_warning) {
+        case LOW_SOC:
+            json_object_push(warnings, "low phone battery warning", json_string_new("PHONE LOW BATTERY"));
+            break;
+        case NOMINAL_SOC:
+            break;
+        default:
+            logger_log("ERROR: PHONE BATTERY WARNING UNDEFINED");
+    }
     json_object_push(object, "warnings", warnings); 
 }
 
@@ -235,6 +281,15 @@ static void serializer_buildjson(json_value *object)
         json_object_push(object, "heart rate", json_integer_new(heartrate));
     }
 
+    json_object_push(object, "play sound", json_string_new(sound_buffer));
+
+    
+    // state of charge
+    json_object_push(object, "8 AH battery", json_integer_new(soc_getcharge(TURNIGY_8_AH)));
+    json_object_push(object, "2 AH battery", json_integer_new(soc_getcharge(TURNIGY_2_AH)));
+    json_object_push(object, "hud battery", json_integer_new(soc_getcharge(GLASS_BATTERY)));
+    json_object_push(object, "phone battery", json_integer_new(soc_getcharge(PHONE_BATTERY)));
+
     // Warnings 
     get_warnings(object);
     
@@ -247,6 +302,15 @@ void serializer_serialize(char *buf)
     serializer_buildjson(object);
 
     json_serialize(buf, object);
-
+   // logger_log(buf);
     json_builder_free(object);
+}
+
+void serializer_save_sound(char *buf)
+{
+    if (sound_buffer == NULL) {
+        sound_buffer = (char*) (BUFFER_SIZE * sizeof(char));
+    }
+
+    sound_buffer = buf;
 }
